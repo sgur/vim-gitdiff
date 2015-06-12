@@ -9,7 +9,7 @@ A tiny plugin to use `git --histogram` as diffexpr.
 Requirement
 -----------
 
-* [vimproc](https://github.com/Shougo/vimproc.vim)
+* [vimproc](https://github.com/Shougo/vimproc.vim) (*Optional, for Windows)
 * git
 
 Usage
