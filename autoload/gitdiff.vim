@@ -4,6 +4,11 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 function! gitdiff#diffexpr()
+  if get(g:, 'gitdiff_skip_check', 0)
+        \ && getfsize(v:fname_in) <= 6 && getfsize(v:fname_new) <= 6
+    call writefile(['1c1'], v:fname_out)
+    return
+  endif
   let icase = &diffopt =~# 'icase'
   if icase
     echomsg 'git_diff: No effect on diffopt+=icase'
@@ -74,4 +79,3 @@ endfunction
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
-
