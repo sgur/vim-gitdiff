@@ -1,9 +1,10 @@
 scriptencoding utf-8
 
-let s:save_cpo = &cpo
-set cpo&vim
 
-function! gitdiff#diffexpr()
+
+" Internal {{{1
+
+function! s:diffexpr(algorithm)
   if get(g:, 'gitdiff_skip_check', 0)
         \ && getfsize(v:fname_in) <= 6 && getfsize(v:fname_new) <= 6
     call writefile(['1c1'], v:fname_out)
@@ -15,18 +16,18 @@ function! gitdiff#diffexpr()
   endif
   let iwhite = &diffopt =~# 'iwhite'
   try
-    let udiff = s:git_diff(v:fname_in, v:fname_new, icase, iwhite)
+    let udiff = s:git_diff(a:algorithm, v:fname_in, v:fname_new, icase, iwhite)
     call writefile(s:unified_to_ed(udiff), v:fname_out)
   catch /^git_diff/
     echoerr v:exception
   endtry
 endfunction
 
-function! s:git_diff(fname1, fname2, icase, iwhite)
+function! s:git_diff(algorithm, fname1, fname2, icase, iwhite)
   let cmd = [get(g:, 'git_diff_progname', 'git'), 'diff']
-  let common = ['--unified=0', '--no-index', '--no-color', '--no-ext-diff', '--']
   let iwhite = a:iwhite ? ['--ignore-space-change'] : []
-  let argorigm = ['--diff-algorithm=' . get(g:, 'git_diff_algorithm', 'histogram')]
+  let argorigm = ['--diff-algorithm=' . a:algorithm]
+  let common = ['--unified=0', '--no-index', '--no-color', '--no-ext-diff', '--']
   let fnames = map(copy([a:fname1, a:fname2]), '"\"" . tr(v:val, "\\", "/") . "\""')
   let ret = s:systemlist(join(cmd + iwhite + argorigm + common + fnames))
   return ret[2:]
@@ -77,5 +78,25 @@ function! s:fix(tuple)
   return len(a:tuple) == 1 ? a:tuple + [1] : a:tuple
 endfunction
 
-let &cpo = s:save_cpo
-unlet s:save_cpo
+
+" Interface {{{1
+
+function! gitdiff#diffexpr() abort
+  call s:diffexpr('myers')
+endfunction
+
+function! gitdiff#histogramdiffexpr() abort
+  call s:diffexpr('histogram')
+endfunction
+
+function! gitdiff#patiencediffexpr() abort
+  call s:diffexpr('patience')
+endfunction
+
+
+" Initialization {{{1
+
+
+
+" 1}}}
+
